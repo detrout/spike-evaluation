@@ -10,11 +10,13 @@ def main(cmdline=None):
 
     for filename in args.filenames:
         with open(filename, 'r') as instream:
-            generate_fasta_windows(instream)
+            generate_fasta_windows(instream, args.window)
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('filenames', nargs='+')
+    parser.add_argument('filenames', nargs='+', help='list fasta files to generate reads from')
+    parser.add_argument('-w', '--window', default=100, type=int,
+                        help='Set sliding window length')
     return parser
 
 def read_fasta(stream):
@@ -39,7 +41,7 @@ def read_fasta(stream):
     if name is not None:
         yield (name, ''.join(seq))
 
-def generate_fasta_windows(stream, read_length=100):
+def generate_fasta_windows(stream, read_length):
     for name, sequence in read_fasta(stream):
         for i in xrange(len(sequence)-read_length+1):
             print('>{}_[{}:{})'.format(name.replace(' ', '_'), i, i+read_length ))
