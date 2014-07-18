@@ -38,6 +38,9 @@ ENCFF001RGR.hg19.2bit:
 	twoBitToFa $^ $@
 
 # make index files, the touch is to create empty flag file if successful
+# build bowtie 1 indexes
+bowtie: index/spikes indexes/ENCFF001RGS+spikes indexes/ENCFF001RGR+spikes
+
 indexes/spikes: $(SPIKE_FILES)
 	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
@@ -47,7 +50,9 @@ indexes/ENCFF001RGS+spikes: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
 indexes/ENCFF001RGR+spikes: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
 	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
-# make index files, the touch is to create empty flag file if successful
+# build bowtie2 indexes
+bowtie2: indexes2/spikes indexes2/ENCFF001RGS+spikes indexes2/ENCFF001RGR+spikes
+
 indexes2/spikes: $(SPIKE_FILES)
 	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
