@@ -23,6 +23,33 @@ ENCFF001RTO.fasta:
 ENCFF001RTP.fasta:
 	curl -O $(EDW)/2013/7/26/$@
 
+#hg19-Female
+ENCFF001RGS.hg19.2bit:
+	curl -O http://encodedcc.sdsc.edu/warehouse/2013/7/8/$@
+
+#hg19-Male
+ENCFF001RGR.hg19.2bit:
+	curl -O http://encodedcc.sdsc.edu/warehouse/2013/7/8/$@
+
+%.fa: %.2bit
+	twoBitToFa $^ $@
+
 # make index files, the touch is to create empty flag file if successful
 indexes/spikes: $(SPIKE_FILES)
 	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+indexes/ENCFF001RGS+spikes: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
+	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+indexes/ENCFF001RGR+spikes: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
+	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+# make index files, the touch is to create empty flag file if successful
+indexes2/spikes: $(SPIKE_FILES)
+	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+indexes2/ENCFF001RGS+spikes: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
+	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+indexes2/ENCFF001RGR+spikes: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
+	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
