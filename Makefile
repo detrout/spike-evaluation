@@ -6,7 +6,9 @@ NULL :=
 SPACE := $(null) #
 COMMA := ,
 
-all: spikes-10.fa spikes-36.fa spikes-75.fa spikes-100.fa
+all: spikes indexes indexes2
+	
+spikes: spikes-10.fa spikes-36.fa spikes-75.fa spikes-100.fa
 
 spikes-10.fa: $(SPIKE_FILES)
 	python slide_window.py -w 10 $^ > $@
