@@ -39,7 +39,7 @@ ENCFF001RGR.hg19.2bit:
 
 # make index files, the touch is to create empty flag file if successful
 # build bowtie 1 indexes
-bowtie: index/spikes indexes/ENCFF001RGS+spikes indexes/ENCFF001RGR+spikes
+bowtie: indexes/spikes indexes/ENCFF001RGS+spikes indexes/ENCFF001RGR+spikes
 
 indexes/spikes: $(SPIKE_FILES)
 	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
