@@ -1,6 +1,16 @@
 SPIKE_FILES := ENCFF001RTO.fasta ENCFF001RTP.fasta
 EDW := http://encodedcc.sdsc.edu/warehouse
 
+BOWTIE1_DIR := /woldlab/castor/data00/proj/genome/programs/bowtie-0.12.9
+BOWTIE2_DIR := /woldlab/castor/data00/proj/genome/programs/bowtie2-2.1.0
+TOPHAT_DIR := /woldlab/castor/data00/proj/genome/programs/tophat-2.0.8.Linux_x86_64
+
+BOWTIE1 := ${BOWTIE1_DIR}/bowtie
+BOWTIE2 := ${BOWTIE2_DIR}/bowtie2
+
+BOWTIE1_BUILD := ${BOWTIE1_DIR}/bowtie-build
+BOWTIE2_BUILD  := ${BOWTIE2_DIR}/bowtie2-build
+
 # part of a magic trick to convert a space seperated list into a comma seperated list
 NULL :=
 SPACE := $(null) #
@@ -43,23 +53,60 @@ ENCFF001RGR.hg19.2bit:
 # build bowtie 1 indexes
 bowtie: indexes/spikes indexes/ENCFF001RGS+spikes indexes/ENCFF001RGR+spikes
 
-indexes/spikes: $(SPIKE_FILES)
-	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/spikes.1.ebwt: $(SPIKE_FILES)
+	$(BOWTIE1_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
-indexes/ENCFF001RGS+spikes: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
-	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/ENCFF001RGS+spikes.1.ebwt: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
+	$(BOWTIE1_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
-indexes/ENCFF001RGR+spikes: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
-	bowtie-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/ENCFF001RGR+spikes.1.ebwt: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
+	$(BOWTIE1_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
 # build bowtie2 indexes
 bowtie2: indexes2/spikes indexes2/ENCFF001RGS+spikes indexes2/ENCFF001RGR+spikes
 
-indexes2/spikes: $(SPIKE_FILES)
-	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/spikes.1.bt2: $(SPIKE_FILES)
+	$(BOWTIE2_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
-indexes2/ENCFF001RGS+spikes: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
-	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/ENCFF001RGS+spikes.1.bt2: ENCFF001RGS.hg19.fa $(SPIKE_FILES)
+	$(BOWTIE2_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
 
-indexes2/ENCFF001RGR+spikes: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
-	bowtie2-build $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+indexes/ENCFF001RGR+spikes.1.bt2: ENCFF001RGR.hg19.fa $(SPIKE_FILES)
+	$(BOWTIE2_BUILD) $(subst $(SPACE),$(COMMA),$^) $@  && touch $@
+
+gencode.v19.annotation.gtf:
+	curl -O ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
+	gunzip gencode.v19.annotation.gtf.gz
+
+tophat: gencode.v19/ENCFF001RGR+spikes.1.ebwt gencode.v19/ENCFF001RGS+spikes.1.ebwt \
+        gencode.v19.bt2/ENCFF001RGR+spikes.1.bt2 gencode.v19.bt2/ENCFF001RGS+spikes.1.bt2
+
+gencode.v19/ENCFF001RGR+spikes.1.ebwt: gencode.v19.annotation.gtf
+	PATH=${BOWTIE1_DIR}:${PATH} \
+	    ${TOPHAT_DIR}/tophat \
+	    --GTF gencode.v19.annotation.gtf \
+	    --bowtie1 \
+	    --transcriptome-index gencode.v19/ENCFF001RGR+spikes \
+	    indexes/ENCFF001RGR+spikes read.fq
+
+gencode.v19/ENCFF001RGS+spikes.1.ebwt: gencode.v19.annotation.gtf
+	PATH=${BOWTIE1_DIR}:${PATH} \
+	    ${TOPHAT_DIR}/tophat \
+	    --GTF gencode.v19.annotation.gtf \
+	    --bowtie1 \
+	    --transcriptome-index gencode.v19/ENCFF001RGS+spikes \
+	    indexes/ENCFF001RGS+spikes read.fq
+
+gencode.v19.bt2/ENCFF001RGR+spikes.1.bt2: gencode.v19.annotation.gtf
+	PATH=${BOWTIE2_DIR}:${PATH} \
+	    ${TOPHAT_DIR}/tophat \
+	    --GTF gencode.v19.annotation.gtf \
+	    --transcriptome-index gencode.v19.bt2/ENCFF001RGR+spikes \
+	    indexes2/ENCFF001RGR+spikes read.fq
+
+gencode.v19.bt2/ENCFF001RGS+spikes.1.bt2: gencode.v19.annotation.gtf
+	PATH=${BOWTIE2_DIR}:${PATH} \
+	    ${TOPHAT_DIR}/tophat \
+	    --GTF gencode.v19.annotation.gtf \
+	    --transcriptome-index gencode.v19.bt2/ENCFF001RGS+spikes \
+	    indexes2/ENCFF001RGS+spikes read.fq
